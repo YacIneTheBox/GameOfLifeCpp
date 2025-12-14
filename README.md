@@ -44,3 +44,16 @@ Une implémentation interactive et moderne du célèbre automate cellulaire **Je
 
 ### Option 1 : CMake (Recommandé)
 
+Cloner le dépôt
+
+git clone https://github.com/votre-username/game-of-life-raylib.git
+cd game-of-life-raylib
+Configurer le projet
+
+cmake -B build
+Compiler
+
+cmake --build build
+Exécuter (depuis le dossier racine)
+
+./build/GameOfLife
