@@ -67,10 +67,10 @@ public:
             if (cells[i+1][j-1].alive) count++;
             return count;
         }
-        else if (i == width-1 && j == height-1){  // Coin bas-droit
+        else if (i == width-1 && j == 0){
             if (cells[i-1][j].alive) count++;
-            if (cells[i][j-1].alive) count++;
-            if (cells[i-1][j-1].alive) count++;
+            if (cells[i][j+1].alive) count++;
+            if (cells[i-1][j+1].alive) count++;
             return count;
         }
         else if (i == 0){
