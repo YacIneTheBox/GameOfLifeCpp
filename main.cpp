@@ -1,11 +1,8 @@
 #include "raylib.h"
-
+#include <string>
+using namespace std;
 /*
- * making the system work
- * adding zoom option
  * adding speed control
- * adding pause option
- * adding reset option
  */
 class Cell{
 public:
@@ -208,6 +205,50 @@ public:
     }
 };
 
+class Button{
+public:
+    float x, y, width, height;
+    string text;
+    bool isToggled;  // Variable membre pour garder l'état
+
+    Button(float x, float y, float width, float height, string t){
+        this->text = t;
+        this->x = x;
+        this->y = y;
+        this->width = width;
+        this->height = height;
+        this->isToggled = false;  // État initial
+    }
+
+    void Draw(){
+        if (IsMouseOver()){
+            DrawRectangleRoundedLines({x, y, width, height}, 2.0f, 4, BLACK);
+        }else{
+            DrawRectangleRoundedLines({x, y, width, height}, 2.0f, 4, GOLD);
+        }
+        DrawText(text.c_str(), x + width/2 - (float)MeasureText(text.c_str(), 20)/2,
+                 y + height/2 - 10, 20, BLACK);
+    }
+
+    bool IsMouseOver(){
+        return CheckCollisionPointRec(GetMousePosition(), {x, y, width, height});
+    }
+
+    void Update(){
+        if(IsMouseOver()){
+            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                isToggled = !isToggled;  // Inverse l'état au clic
+            }
+        }
+        Draw();
+    }
+
+    bool GetState(){
+        return isToggled;
+    }
+};
+
+
 int main() {
     const int screenWidth = 1200;
     const int screenHeight = 900;
@@ -228,11 +269,24 @@ int main() {
     Grid grid(gridareawidth / cellSize, screenHeight / cellSize, cellSize);
     grid.Init();
 
+    // buttons
+    Button pauseButton(gridareawidth + 50, 30, 200, 50, "Resume");
+
     bool paused = true;
     Color caseColor = RAYWHITE;
+
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+
+        // Mettre à jour le bouton
+        pauseButton.Update();
+
+        // Lire l'état du bouton
+        paused = !pauseButton.GetState();  // Si toggled = true, paused = false
+
+        // Mettre à jour le texte
+        pauseButton.text = pauseButton.GetState() ? "Pause" : "Start";
 
         // separate line
         DrawLineEx(Vector2{screenHeight+5, 0}, Vector2{screenHeight+5, screenHeight}, 10.0f, GRAY);
@@ -240,7 +294,6 @@ int main() {
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) grid.SelectionCheck(GetMousePosition());
         if (IsKeyPressed(KEY_SPACE))paused = !paused;
-        if(paused == false)grid.Update();
 
         // Pour sauvegarder
         if (IsKeyPressed(KEY_S) && paused == true){
@@ -256,7 +309,7 @@ int main() {
         if (IsKeyPressed(KEY_R) && paused == true){
             grid.Init();
         }
-
+        if(!paused) grid.Update();
         EndDrawing();
     }
     CloseWindow();
