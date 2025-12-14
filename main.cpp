@@ -336,7 +336,7 @@ int main() {
 
         grid.Draw();
 
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
             Vector2 mousePos = GetMousePosition();
             if(mousePos.x < gridAreaWidth) {
                 grid.SelectionCheck(mousePos);
