@@ -57,3 +57,71 @@ cmake --build build
 Exécuter (depuis le dossier racine)
 
 ./build/GameOfLife
+
+
+## 🛠️ Architecture du Code
+
+### Classes principales
+
+- **`Cell`** : Représente une cellule individuelle (position x,y et état alive)
+- **`Grid`** : Gère la grille complète avec logique du Jeu de la Vie
+  - Constructeur de copie et opérateur d'assignation pour deep copy
+  - Calcul des voisins avec gestion des bordures
+  - Double buffering pour mise à jour correcte
+- **`Button`** : Bouton cliquable avec état toggle
+- **`Slider`** : Slider draggable pour ajuster la vitesse
+
+### Optimisations
+
+- Gestion mémoire propre avec destructeurs
+- Deep copy pour sauvegarde/chargement de motifs
+- Interface adaptative basée sur pourcentages
+- Double buffer pour éviter les artefacts de mise à jour
+
+## 🎨 Motifs Célèbres à Tester
+
+Essayez ces motifs classiques :
+
+- **Glider** : Un motif qui se déplace en diagonale
+- **Oscillateurs** : Motifs qui alternent entre états (Blinker, Toad, Pulsar)
+- **Vaisseaux spatiaux** : Structures mobiles (LWSS, MWSS, HWSS)
+- **Canons** : Générateurs de gliders (Canon de Gosper)
+
+## 📝 TODO / Améliorations Futures
+
+- [ ] Zoom/Pan pour grilles plus grandes
+- [ ] Bibliothèque de motifs prédéfinis
+- [ ] Export/Import de motifs (fichiers .cells, .rle)
+- [ ] Compteur de générations et de cellules vivantes
+- [ ] Mode grille infinie (torique)
+- [ ] Historique des états (undo/redo)
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à :
+
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/amelioration`)
+3. Commit vos changements (`git commit -m 'Ajout fonctionnalité'`)
+4. Push (`git push origin feature/amelioration`)
+5. Ouvrir une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 🙏 Remerciements
+
+- [Raylib](https://www.raylib.com/) - Framework graphique simple et efficace
+- [John Conway](https://en.wikipedia.org/wiki/John_Horton_Conway) - Créateur du Jeu de la Vie
+- La communauté des automates cellulaires
+
+## 📧 Contact
+
+Votre Nom - [@votre_twitter](https://twitter.com/votre_twitter)
+
+Lien du projet: [https://github.com/votre-username/game-of-life-raylib](https://github.com/votre-username/game-of-life-raylib)
+
+---
+
+⭐ Si ce projet vous a plu, n'hésitez pas à lui donner une étoile sur GitHub !
