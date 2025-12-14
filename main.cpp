@@ -1,4 +1,5 @@
 #include "raylib.h"
+
 /*
  * making the system work
  * adding zoom option
@@ -28,6 +29,57 @@ public:
         for(int i = 0; i < width; i++){
             cells[i] = new Cell[height];
         }
+    }
+
+    // Constructeur de copie
+    Grid(const Grid& other){
+        width = other.width;
+        height = other.height;
+        cellSize = other.cellSize;
+
+        // Allouer un nouveau tableau
+        cells = new Cell*[width];
+        for(int i = 0; i < width; i++){
+            cells[i] = new Cell[height];
+            // Copier chaque cellule
+            for(int j = 0; j < height; j++){
+                cells[i][j] = other.cells[i][j];
+            }
+        }
+    }
+
+    // Opérateur d'assignation
+    Grid& operator=(const Grid& other){
+        if(this != &other){  // Éviter l'auto-assignation
+            // Libérer l'ancienne mémoire
+            for(int i = 0; i < width; i++){
+                delete[] cells[i];
+            }
+            delete[] cells;
+
+            // Copier les dimensions
+            width = other.width;
+            height = other.height;
+            cellSize = other.cellSize;
+
+            // Allouer et copier
+            cells = new Cell*[width];
+            for(int i = 0; i < width; i++){
+                cells[i] = new Cell[height];
+                for(int j = 0; j < height; j++){
+                    cells[i][j] = other.cells[i][j];
+                }
+            }
+        }
+        return *this;
+    }
+
+    // Destructeur (important pour éviter les fuites mémoire!)
+    ~Grid(){
+        for(int i = 0; i < width; i++){
+            delete[] cells[i];
+        }
+        delete[] cells;
     }
 
     void Init(){
@@ -148,7 +200,7 @@ public:
                 if(!cells[i][j].alive){
                     DrawRectangleLines(i * cellSize, j * cellSize, cellSize, cellSize, BLACK);
                 }else{
-                    DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, PURPLE);
+                    DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, GOLD);
                 }
 
             }
@@ -158,14 +210,17 @@ public:
 
 int main() {
     const int screenWidth = 1200;
-    const int gridareawidth = screenWidth - 400;
-    const int screenHeight = 800;
-    const int cellSize = 10;
+    const int screenHeight = 900;
+    const int gridareawidth = screenWidth - (screenWidth-screenHeight);
+    const int cellSize = (screenWidth/screenHeight)*15;
 
     Grid** savedPaterns = new Grid*[10];
     for(int i = 0; i < 10; i++){
         savedPaterns[i] = new Grid(gridareawidth / cellSize, screenHeight / cellSize, cellSize);
     }
+    int savedPatternIndex = 0;
+
+    Grid* savedPat = nullptr;
 
     InitWindow(screenWidth, screenHeight, "Game of Life");
     SetTargetFPS(10);
@@ -174,17 +229,34 @@ int main() {
     grid.Init();
 
     bool paused = true;
-
+    Color caseColor = RAYWHITE;
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+
         // separate line
-        DrawLineEx(Vector2{805, 0}, Vector2{805, 800}, 10.0f, GRAY);
+        DrawLineEx(Vector2{screenHeight+5, 0}, Vector2{screenHeight+5, screenHeight}, 10.0f, GRAY);
         grid.Draw();
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) grid.SelectionCheck(GetMousePosition());
         if (IsKeyPressed(KEY_SPACE))paused = !paused;
         if(paused == false)grid.Update();
+
+        // Pour sauvegarder
+        if (IsKeyPressed(KEY_S) && paused == true){
+            if(savedPat != nullptr) delete savedPat;  // Libérer l'ancienne sauvegarde
+            savedPat = new Grid(grid);  // Utilise le constructeur de copie
+        }
+
+        // Pour charger
+        if (IsKeyPressed(KEY_L) && paused == true && savedPat != nullptr){
+            grid = *savedPat;  // Utilise l'opérateur d'assignation
+        }
+
+        if (IsKeyPressed(KEY_R) && paused == true){
+            grid.Init();
+        }
+
         EndDrawing();
     }
     CloseWindow();
