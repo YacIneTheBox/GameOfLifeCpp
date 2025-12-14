@@ -210,7 +210,7 @@ class Button{
 public:
     float x, y, width, height;
     string text;
-    bool isToggled;  // Variable membre pour garder l'état
+    bool isToggled;
 
     Button(float x, float y, float width, float height, string t){
         this->text = t;
@@ -218,17 +218,24 @@ public:
         this->y = y;
         this->width = width;
         this->height = height;
-        this->isToggled = false;  // État initial
+        this->isToggled = false;
     }
 
     void Draw(){
+        // Taille de police adaptative basée sur la hauteur du bouton
+        int fontSize = height * 0.4f;  // 40% de la hauteur du bouton
+
         if (IsMouseOver()){
-            DrawRectangleRoundedLines({x, y, width, height}, 2.0f, 4, BLACK);
+            DrawRectangleRoundedLines({x, y, width, height}, 0.2f, 4, BLACK);
         }else{
-            DrawRectangleRoundedLines({x, y, width, height}, 2.0f, 4, GOLD);
+            DrawRectangleRoundedLines({x, y, width, height}, 0.2f, 4, GOLD);
         }
-        DrawText(text.c_str(), x + width/2 - (float)MeasureText(text.c_str(), 20)/2,
-                 y + height/2 - 10, 20, BLACK);
+
+        int textWidth = MeasureText(text.c_str(), fontSize);
+        DrawText(text.c_str(),
+                 x + (width - textWidth) / 2,
+                 y + (height - fontSize) / 2,
+                 fontSize, BLACK);
     }
 
     bool IsMouseOver(){
@@ -251,73 +258,118 @@ public:
 
 
 int main() {
-    const int screenWidth = 1200;
-    const int screenHeight = 900;
-    const int gridareawidth = screenWidth - (screenWidth-screenHeight);
-    const int cellSize = (screenWidth/screenHeight)*15;
+    // Utiliser des dimensions de base fixes mais raisonnables
+    const int BASE_WIDTH = 1200;
+    const int BASE_HEIGHT = 900;
 
-    Grid** savedPaterns = new Grid*[10];
-    for(int i = 0; i < 10; i++){
-        savedPaterns[i] = new Grid(gridareawidth / cellSize, screenHeight / cellSize, cellSize);
-    }
-    int savedPatternIndex = 0;
+    InitWindow(BASE_WIDTH, BASE_HEIGHT, "Game of Life");
+
+    // MAINTENANT on peut récupérer les vraies dimensions de l'écran
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+
+    // Zone de grille = 75% de la largeur
+    const int gridAreaWidth = screenWidth * 0.75f;
+
+    // Zone UI = 25% restante
+    const int uiAreaX = gridAreaWidth;
+    const int uiAreaWidth = screenWidth - gridAreaWidth;
+
+    // Taille de cellule adaptative basée sur la hauteur
+    int cellSize = screenHeight / 60; // Environ 60 cellules en hauteur
+    if(cellSize < 8) cellSize = 8;
+    if(cellSize > 20) cellSize = 20;
 
     Grid* savedPat = nullptr;
-
-    InitWindow(screenWidth, screenHeight, "Game of Life");
     SetTargetFPS(10);
 
-    Grid grid(gridareawidth / cellSize, screenHeight / cellSize, cellSize);
+    Grid grid(gridAreaWidth / cellSize, screenHeight / cellSize, cellSize);
     grid.Init();
 
-    // buttons
-    Button pauseButton(gridareawidth + 50, 30, 200, 50, "Resume");
+    // Boutons avec positions adaptatives (en pourcentage)
+    float buttonWidth = uiAreaWidth * 0.75f;      // 75% de la largeur UI
+    float buttonHeight = screenHeight * 0.07f;    // 7% de la hauteur
+    float buttonX = uiAreaX + (uiAreaWidth - buttonWidth) / 2;  // Centré
+    float marginTop = screenHeight * 0.04f;       // 4% de marge
+
+    Button pauseButton(buttonX, marginTop, buttonWidth, buttonHeight, "Start");
+
+    // Slider adaptatif
+    float sliderY = marginTop + buttonHeight + marginTop;
+    float sliderHeight = screenHeight * 0.02f;    // 2% de hauteur
+    Slider speedSlider(buttonX, sliderY, buttonWidth, sliderHeight, 1, 60, 10);
+
+    // Boutons supplémentaires
+    float spacing = screenHeight * 0.025f;
+    float buttonY2 = sliderY + sliderHeight + spacing + marginTop;
+    float buttonY3 = buttonY2 + buttonHeight + spacing;
+    float buttonY4 = buttonY3 + buttonHeight + spacing;
+
+    Button saveButton(buttonX, buttonY2, buttonWidth, buttonHeight, "Save (S)");
+    Button loadButton(buttonX, buttonY3, buttonWidth, buttonHeight, "Load (L)");
+    Button resetButton(buttonX, buttonY4, buttonWidth, buttonHeight, "Reset (R)");
 
     bool paused = true;
-    Color caseColor = RAYWHITE;
-
-    // créé le slider (vitesse de 1 a 60 fps)
-    Slider speedSlider(gridareawidth + 50, 200, 200, 10, 1, 60, 10);
 
     while (!WindowShouldClose()) {
         SetTargetFPS(speedSlider.GetValue());
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        // Mettre à jour le bouton
+        // Mettre à jour les contrôles
         pauseButton.Update();
         speedSlider.Update();
         speedSlider.Draw();
-        // Lire l'état du bouton
-        paused = !pauseButton.GetState();  // Si toggled = true, paused = false
 
-        // Mettre à jour le texte
+        saveButton.Draw();
+        loadButton.Draw();
+        resetButton.Draw();
+
+        paused = !pauseButton.GetState();
         pauseButton.text = pauseButton.GetState() ? "Pause" : "Start";
 
-        // separate line
-        DrawLineEx(Vector2{screenHeight+5, 0}, Vector2{screenHeight+5, screenHeight}, 10.0f, GRAY);
+        // Ligne de séparation
+        float lineWidth = 5;
+        DrawLineEx(Vector2{(float)gridAreaWidth, 0},
+                   Vector2{(float)gridAreaWidth, (float)screenHeight},
+                   lineWidth, GRAY);
+
         grid.Draw();
 
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) grid.SelectionCheck(GetMousePosition());
-        if (IsKeyPressed(KEY_SPACE))paused = !paused;
-
-        // Pour sauvegarder
-        if (IsKeyPressed(KEY_S) && paused == true){
-            if(savedPat != nullptr) delete savedPat;  // Libérer l'ancienne sauvegarde
-            savedPat = new Grid(grid);  // Utilise le constructeur de copie
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            Vector2 mousePos = GetMousePosition();
+            if(mousePos.x < gridAreaWidth) {
+                grid.SelectionCheck(mousePos);
+            }
+            if(saveButton.IsMouseOver() && paused) {
+                if(savedPat != nullptr) delete savedPat;
+                savedPat = new Grid(grid);
+            }
+            if(loadButton.IsMouseOver() && paused && savedPat != nullptr) {
+                grid = *savedPat;
+            }
+            if(resetButton.IsMouseOver() && paused) {
+                grid.Init();
+            }
         }
 
-        // Pour charger
-        if (IsKeyPressed(KEY_L) && paused == true && savedPat != nullptr){
-            grid = *savedPat;  // Utilise l'opérateur d'assignation
+        if (IsKeyPressed(KEY_SPACE)) paused = !paused;
+        if (IsKeyPressed(KEY_S) && paused) {
+            if(savedPat != nullptr) delete savedPat;
+            savedPat = new Grid(grid);
         }
-
-        if (IsKeyPressed(KEY_R) && paused == true){
+        if (IsKeyPressed(KEY_L) && paused && savedPat != nullptr) {
+            grid = *savedPat;
+        }
+        if (IsKeyPressed(KEY_R) && paused) {
             grid.Init();
         }
+
         if(!paused) grid.Update();
         EndDrawing();
     }
+
+    if(savedPat != nullptr) delete savedPat;
     CloseWindow();
     return 0;
 }
