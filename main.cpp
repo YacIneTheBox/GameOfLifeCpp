@@ -148,7 +148,7 @@ public:
                 if(!cells[i][j].alive){
                     DrawRectangleLines(i * cellSize, j * cellSize, cellSize, cellSize, BLACK);
                 }else{
-                    DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, BLACK);
+                    DrawRectangle(i * cellSize, j * cellSize, cellSize, cellSize, PURPLE);
                 }
 
             }
@@ -162,10 +162,15 @@ int main() {
     const int screenHeight = 800;
     const int cellSize = 10;
 
+    Grid** savedPaterns = new Grid*[10];
+    for(int i = 0; i < 10; i++){
+        savedPaterns[i] = new Grid(gridareawidth / cellSize, screenHeight / cellSize, cellSize);
+    }
+
     InitWindow(screenWidth, screenHeight, "Game of Life");
     SetTargetFPS(10);
 
-    Grid grid(gridareawidth / cellSize, gridareawidth / cellSize, cellSize);
+    Grid grid(gridareawidth / cellSize, screenHeight / cellSize, cellSize);
     grid.Init();
 
     bool paused = true;
