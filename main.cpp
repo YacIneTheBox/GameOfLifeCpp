@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include <string>
+#include "Slider.h"
 using namespace std;
 /*
  * adding speed control
@@ -275,13 +276,18 @@ int main() {
     bool paused = true;
     Color caseColor = RAYWHITE;
 
+    // créé le slider (vitesse de 1 a 60 fps)
+    Slider speedSlider(gridareawidth + 50, 200, 200, 10, 1, 60, 10);
+
     while (!WindowShouldClose()) {
+        SetTargetFPS(speedSlider.GetValue());
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
         // Mettre à jour le bouton
         pauseButton.Update();
-
+        speedSlider.Update();
+        speedSlider.Draw();
         // Lire l'état du bouton
         paused = !pauseButton.GetState();  // Si toggled = true, paused = false
 
